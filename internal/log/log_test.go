@@ -5,9 +5,9 @@ import (
 	"os"
 	"testing"
 
-	api "github.com/DarkWorldCoder/logHandlerGolang/api/v1"
-	"github.com/golang/protobuf/proto"
+	api "github.com/DarkWorldCoder/logHandlerGoLang/api/v1"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/proto"
 )
 
 func TestLog(t *testing.T) {
@@ -47,6 +47,12 @@ func testOutOfRangeErr(t *testing.T, log *Log) {
 	read, err := log.Read(1)
 	require.Nil(t, read)
 	require.Error(t, err)
+}
+func testOutOfRange(t *testing.T, log *Log) {
+	read, err := log.Read(1)
+	require.Nil(t, read)
+	require.Error(t, err)
+
 }
 
 func testInitExisting(t *testing.T, o *Log) {

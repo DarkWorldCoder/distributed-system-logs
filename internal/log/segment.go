@@ -5,9 +5,9 @@ import (
 	"os"
 	"path"
 
-	api "github.com/DarkWorldCoder/logHandlerGolang/api/v1"
+	api "github.com/DarkWorldCoder/logHandlerGoLang/api/v1"
 
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 )
 
 type segment struct {

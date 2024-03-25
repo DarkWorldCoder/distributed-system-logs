@@ -4,6 +4,7 @@ import (
 	"context"
 
 	api "github.com/DarkWorldCoder/logHandlerGoLang/api/v1"
+	"google.golang.org/grpc"
 )
 
 type Config struct {
@@ -87,4 +88,44 @@ func (s *grpcServer) ConsumerStream(
 			req.Offset++
 		}
 	}
+}
+
+func (s *grpcServer) ConsumeStream(
+	req *api.ConsumeRequest,
+	stream api.Log_ConsumeStreamServer,
+) error {
+	for {
+		select {
+		case <-stream.Context().Done():
+			return nil
+		default:
+			res, err := s.Consume(stream.Context(), req)
+			switch err.(type) {
+			case nil:
+			case api.ErrOffsetOutOfRange:
+				continue
+			default:
+				return err
+			}
+			if err = stream.Send(res); err != nil {
+				return err
+			}
+			req.Offset++
+		}
+	}
+}
+
+type CommitLog interface {
+	Append(*api.Record) (uint64, error)
+	Read(uint64) (*api.Record, error)
+}
+
+func NewGRPCServer(config *Config) (*grpc.Server, error) {
+	gsrv := grpc.NewServer()
+	srv, err := newgrpcServer(config)
+	if err != nil {
+		return nil, err
+	}
+	api.RegisterLogServer(gsrv, srv)
+	return gsrv, nil
 }

@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"net"
 	"os"
 	"testing"
@@ -115,11 +116,60 @@ func testConsumePastBoundary(
 	got := grpc.Code(err)
 	want := grpc.Code(api.ErrOffsetOutOfRange{}.GRPCStatus().Err())
 	if got != want {
-		t.Fatalf("got err : %v, want: %v",got,want)
+		t.Fatalf("got err : %v, want: %v", got, want)
 	}
 }
 
 func testProduceConsumeStream(
-	t *testing.T, 
-	client api.Log
-)
+	t *testing.T,
+	client api.LogClient,
+	config *Config,
+) {
+	ctx := context.Background()
+	records := []*api.Record{{
+		Value:  []byte("First message"),
+		Offset: 0,
+	},
+		{
+			Value:  []byte("second message"),
+			Offset: 1,
+		},
+	}
+	{
+		stream, err := client.ProduceStream(ctx)
+		require.NoError(t, err)
+		for offset, record := range records {
+			err = stream.Send(&api.ProduceRequest{
+				Record: record,
+			})
+
+			require.NoError(t, err)
+			res, err := stream.Recv()
+			require.NoError(t, err)
+			if res.Offset != uint64(offset) {
+				t.Fatalf(
+					"got offset: %d, want: %d",
+					res.Offset,
+					offset,
+				)
+			}
+		}
+	}
+	{
+		stream, err := client.ConsumeStream(
+			ctx,
+			&api.ConsumeRequest{
+				Offset: 0,
+			},
+		)
+		require.NoError(t, err)
+		for i, record := range records {
+			res, err := stream.Recv()
+			require.NoError(t, err)
+			require.Equal(t, res.Record, &api.Record{
+				Value:  record.Value,
+				Offset: uint64(i),
+			})
+		}
+	}
+}

@@ -1,0 +1,16 @@
+{
+    "CN": "Log Handler",
+    "key": {
+    "algo": "rsa",
+    "size": 2048
+    },
+    "names": [
+    {
+    "C": "NP",
+    "L": "KTM",
+    "ST": "Kathmandu",
+    "O": "Eterosoft",
+    "OU": "Engineers"
+    }
+    ]
+    }
